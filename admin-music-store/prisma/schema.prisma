@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String      @id @default(uuid())
+  email    String   @unique
+  password String
+}
+model Order {
+  id          String         @id @default(cuid())
+  name        String         
+  reference   String        @unique
+  phone       String
+  email       String
+  address     String
+  status      Status      @default(Waiting)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  title       String      @unique
+  description String
+  images      String[]
+  price       Int         @default(0)
+  discount    Float       
+  stock       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  brandId     String
+  brand       Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[] 
+}
+
+model OrderItem {
+  id          Int         @id @default(autoincrement())
+  orderId     String
+  productId   String
+
+  title       String      
+  price       Int
+  quantity    Int         @default(1) 
+  discount    Float?    
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, productId])
+}
+
+model Category {
+  id         String       @id @default(cuid())
+  title      String    @unique
+  image      String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  typeId     String       
+  type       Type      @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
+  products   Product[] 
+}
+
+model Type {
+  id         String       @id @default(cuid())
+  title      String    @unique
+  image      String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  categories Category[]
+}
+
+model Brand {
+  id         String    @id @default(cuid())
+  title      String    @unique
+  image      String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  products Product[]
+}
+
+model HeroImages {
+  id      String   @id @default(cuid())
+  url     String     @unique
+  addedAt DateTime @default(now())
+}
+
+enum Status {
+  Waiting 
+  Cancelled 
+  Delivered
+}
